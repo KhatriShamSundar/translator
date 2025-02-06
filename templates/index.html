@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quran Chapter and Verse Viewer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        #loading-bar {
+            display: none;
+            width: 0%;
+            height: 4px;
+            background-color: green;
+            margin-bottom: 20px;
+        }
+        #content {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Enter Chapter and Verse</h1>
+    <form id="input-form">
+        <label for="chapter">Chapter:</label>
+        <input type="number" id="chapter" required><br><br>
+        <label for="verse">Verse:</label>
+        <input type="number" id="verse" required><br><br>
+        <button type="submit">Fetch Data</button>
+    </form>
+
+    <div id="loading-bar"></div>
+
+    <div id="content">
+        <h2>Translation</h2>
+        <p id="translation"></p>
+
+        <h2>Morphology Table</h2>
+        <div id="morphology-table"></div>
+    </div>
+
+    <script>
+        document.getElementById('input-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const chapter = document.getElementById('chapter').value;
+            const verse = document.getElementById('verse').value;
+
+            document.getElementById('loading-bar').style.display = 'block';
+            document.getElementById('content').style.display = 'none';
+
+            let progress = 0;
+            const loadingInterval = setInterval(function() {
+                if (progress < 100) {
+                    progress += 2;
+                    document.getElementById('loading-bar').style.width = progress + '%';
+                }
+            }, 50);
+
+            fetch('/get_data', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `chapter=${chapter}&verse=${verse}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                clearInterval(loadingInterval);
+                document.getElementById('loading-bar').style.display = 'none';
+                document.getElementById('content').style.display = 'block';
+
+                if (data.error) {
+                    alert(data.error);
+                } else {
+                    document.getElementById('translation').innerText = data.translation;
+                    document.getElementById('morphology-table').innerHTML = data.morphology_table;
+                }
+            });
+        });
+    </script>
+</body>
+</html>
